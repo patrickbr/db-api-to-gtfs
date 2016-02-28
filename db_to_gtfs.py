@@ -125,6 +125,8 @@ class DBApiToGTFS(object):
 
     def fetch_json(self, url):
         """Fetch remote json"""
+
+        # TODO: error handling, retry etc.
         response = urllib2.urlopen(url)
         data = json.load(response)
 
@@ -391,6 +393,23 @@ class DBApiToGTFS(object):
                     'agency_lang': 'de'
                 })
 
+    def write_feed_info(self):
+        """Write feed_info to file"""
+        with open(os.path.join(self.out_dir, 'feed_info.txt'), 'wb') as fhandle:
+            fieldnames = [
+                'feed_publisher_name', 'feed_publisher_url', 'feed_lang', 'feed_start_date', 'feed_end_date']
+            writer = csv.DictWriter(fhandle, delimiter=',',
+                                    quotechar='"', fieldnames=fieldnames)
+            writer.writeheader()
+
+            writer.writerow({
+                'feed_publisher_name': 'DB-to-GTFS converter, based on DB-API data',
+                'feed_publisher_url': 'http://www.patrickbrosi.de/de/dbgtfs',
+                'feed_lang': 'de',
+                'feed_start_date': self.start_date.strftime('%Y%m%d'),
+                'feed_end_date': self.end_date.strftime('%Y%m%d')
+            })
+
     def get_unfetched_station_id(self):
         """Return a station that has not yet been trip-processed"""
         for sid in self.stops:
@@ -431,6 +450,7 @@ def main(options=None):
     converter.write_calendar_dates()
     converter.write_routes()
     converter.write_agencies()
+    converter.write_feed_info()
 
     print 'Done, written %d trips, %d routes, %s services, %s stops' % (len(converter.trips), len(converter.routes), len(converter.calendar_dates), len(converter.stops))
 
@@ -438,7 +458,7 @@ if __name__ == '__main__':
     from docopt import docopt
 
     arguments = docopt(
-        __doc__, version='DB Api to GTFS concerter, 2016 by Patrick Brosi')
+        __doc__, version='DB Api to GTFS converter 0,1, 2016 by Patrick Brosi')
     try:
         main(options=arguments)
     except KeyboardInterrupt:
