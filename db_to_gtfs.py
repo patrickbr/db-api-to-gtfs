@@ -75,7 +75,7 @@ class DBApiToGTFS(object):
         stop['trips_fetched'] = True
 
         while stop['last_date'] < self.end_date:
-            print '@ #%d (%s) on %s %s, trips collected: %d' % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips))
+            print '@ #%d (%s) on %s %s, unique trips collected: %d' % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips))
             requrl = string.Template(DEP_URL).substitute({
                 'id': stop['stop_id'],
                 'date': stop['last_date'].strftime('%Y-%m-%d'),
