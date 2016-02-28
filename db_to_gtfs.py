@@ -75,7 +75,7 @@ class DBApiToGTFS(object):
         stop['trips_fetched'] = True
 
         while stop['last_date'] < self.end_date:
-            print "@ #%d (%s) on %s %s, trips collected: %d" % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips))
+            print '@ #%d (%s) on %s %s, trips collected: %d' % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips))
             requrl = string.Template(DEP_URL).substitute({
                 'id': stop['stop_id'],
                 'date': stop['last_date'].strftime('%Y-%m-%d'),
@@ -239,6 +239,8 @@ class DBApiToGTFS(object):
         start_date = dateparse(trip['stoptimes'][0]['departure_date'])
 
         for stoptime in trip['stoptimes']:
+            # gtfs needs stoptimes overlapping into the following day to have
+            # times like 25:35:00
             arrdelta = (dateparse(stoptime['arrival_date']) - start_date).days
             depdelta = (
                 dateparse(stoptime['departure_date']) - start_date).days
@@ -316,8 +318,8 @@ class DBApiToGTFS(object):
                 for stoptime in trip['stoptimes']:
                     stoptimes_writer.writerow({
                         'trip_id': tid,
-                        'arrival_time': stoptime['arrival_time'],
-                        'departure_time': stoptime['departure_time'],
+                        'arrival_time': stoptime['arrival_time'] + ':00',
+                        'departure_time': stoptime['departure_time'] + ':00',
                         'stop_id': stoptime['stop_id'],
                         'stop_sequence': stoptime['stop_sequence']
                     })
@@ -426,14 +428,14 @@ def main(options=None):
             dateparse(options['--start-date']) + timedelta(days=3)).strftime("%Y-%m-%d")
 
     converter = DBApiToGTFS({
-        "start_date": dateparse(options['--start-date']),
-        "end_date": dateparse(options['--end-date']),
-        "output_dir": options['--output-dir']
+        'start_date': dateparse(options['--start-date']),
+        'end_date': dateparse(options['--end-date']),
+        'output_dir': options['--output-dir']
     })
 
     station_seed = options['--station-seed'].split(',')
 
-    print "Generating GTFS feed from %s to %s" % (options['--start-date'], options['--end-date'])
+    print 'Generating GTFS feed from %s to %s' % (options['--start-date'], options['--end-date'])
 
     for seed in station_seed:
         converter.process_station_by_id(int(seed))
