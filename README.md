@@ -2,7 +2,7 @@
 
 Convert the timetable data published through the [DB API](http://data.deutschebahn.com/apis/fahrplan/) to a GTFS feed.
 
-An example feed valid from February 28th to May 1rst can be found [here](http://patrickbrosi.de/de/dbgtfs).
+An example feed valid from February 28th to May 1rst can be found [here](http://patrickbrosi.de/de/projects/dbgtfs).
 
 ## Usage
 
