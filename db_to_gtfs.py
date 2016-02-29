@@ -49,6 +49,7 @@ class DBApiToGTFS(object):
         self.end_date = options['end_date']
         self.out_dir = options['output_dir']
         self.htmlparser = HTMLParser.HTMLParser()
+        self.unproced_counter = 0
 
     def process_station_by_id(self, sid):
         """Process a station by its id"""
@@ -66,6 +67,7 @@ class DBApiToGTFS(object):
         if not int(station['id']) in self.stops:
             gtfs_station = self.get_station_ob(station)
             self.stops[int(station['id'])] = gtfs_station
+            self.unproced_counter = self.unproced_counter + 1
 
     def get_all_trips_for_stop(self, stop):
         """Read all trips for a stop object"""
@@ -75,7 +77,7 @@ class DBApiToGTFS(object):
         stop['trips_fetched'] = True
 
         while stop['last_date'] < self.end_date:
-            print '@ #%d (%s) on %s %s, unique trips collected: %d' % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips))
+            print '@ #%d (%s) on %s %s, unique trips collected: %d, unprocessed stations left: %d' % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips), self.unproced_counter)
             requrl = string.Template(DEP_URL).substitute({
                 'id': stop['stop_id'],
                 'date': stop['last_date'].strftime('%Y-%m-%d'),
@@ -109,6 +111,8 @@ class DBApiToGTFS(object):
                             # unique per day!
                             self.process_trip(dep['JourneyDetailRef']['ref'])
                             self.processed.append(dep)
+
+        self.unproced_counter = self.unproced_counter - 1
 
     def get_first_in_list(self, obj):
         """Expand the strange array format of the DB json format"""
@@ -224,7 +228,7 @@ class DBApiToGTFS(object):
         self.routes.append({
             'route_short_name': short_name,
             'route_long_name': long_name,
-            'route_type': 2,
+            'route_type': 3 if short_name == 'Bus' else 2,
             'agency_id': agency_id
         })
 
