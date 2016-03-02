@@ -8,7 +8,7 @@ An example feed valid from February 28th to May 1rst can be found [here](http://
 
 Get a GTFS feed valid from May 1st to August 1st 2016
 
-    $ ./db_to_gtfs.py --start-date 2016-5-1 --end-date 2016-8-1
+    $ ./db_to_gtfs.py --api-key <your api key> --start-date 2016-5-1 --end-date 2016-8-1
 
 ### Method
 

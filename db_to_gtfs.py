@@ -6,7 +6,7 @@ DB API to GTFS converter- (C) 2016 by Patrick Brosi
 Harvests the Deutsche Bahn API and generates a GTFS feed
 
 Usage:
-  db_to_gtfs.py [--start-date=<date>] [--end-date=<date>] [--station-seed=<sids>] [--output-dir=<dir>]
+  db_to_gtfs.py --api-key=<key> [--start-date=<date>] [--end-date=<date>] [--station-seed=<sids>] [--output-dir=<dir>]
   db_to_gtfs.py -h | --help
   db_to_gtfs.py --version
 
@@ -17,6 +17,7 @@ Options:
   --end-date=<date>             End date of the feed (start date + 3 days by default)
   --station-seed=<sids>         Comma separated list of seed stations [default: 8011160]
   --output-dir=<dir>            Output directory [default: .]
+  --api-key=<key>               DB-API-Key
 """
 
 import urllib2
@@ -30,8 +31,8 @@ from dateutil.parser import parse as dateparse
 from datetime import timedelta
 from sets import Set
 
-DEP_URL = 'http://open-api.bahn.de/bin/rest.exe/departureBoard?authKey=<insert api key here>&lang=de&id=00$id&date=$date&time=$time&format=json'
-STATION_URL = 'http://open-api.bahn.de/bin/rest.exe/location.name?authKey=<insert api key here>&lang=de&input=$search&format=json'
+DEP_URL = 'http://open-api.bahn.de/bin/rest.exe/departureBoard?authKey=$key&lang=de&id=00$id&date=$date&time=$time&format=json'
+STATION_URL = 'http://open-api.bahn.de/bin/rest.exe/location.name?authKey=$key&lang=de&input=$search&format=json'
 
 
 class DBApiToGTFS(object):
@@ -50,6 +51,7 @@ class DBApiToGTFS(object):
         self.out_dir = options['output_dir']
         self.htmlparser = HTMLParser.HTMLParser()
         self.unproced_counter = 0
+        self.api_key = options['api_key']
 
     def process_station_by_id(self, sid):
         """Process a station by its id"""
@@ -81,7 +83,8 @@ class DBApiToGTFS(object):
             requrl = string.Template(DEP_URL).substitute({
                 'id': stop['stop_id'],
                 'date': stop['last_date'].strftime('%Y-%m-%d'),
-                'time': str(stop['last_check_h']) + ':' + str(stop['last_check_m'])
+                'time': str(stop['last_check_h']) + ':' + str(stop['last_check_m']),
+                'key' : self.api_key
             })
             response = urllib2.urlopen(requrl)
             data = json.load(response)
@@ -264,7 +267,7 @@ class DBApiToGTFS(object):
 
     def get_station_detail(self, stat_id):
         """Return station detail from remote"""
-        requrl = string.Template(STATION_URL).substitute({'search': stat_id})
+        requrl = string.Template(STATION_URL).substitute({'search': stat_id, 'key' : self.api_key})
         data = self.fetch_json(requrl)
         station = data.get('LocationList', {}).get('StopLocation')
         return station
@@ -434,7 +437,8 @@ def main(options=None):
     converter = DBApiToGTFS({
         'start_date': dateparse(options['--start-date']),
         'end_date': dateparse(options['--end-date']),
-        'output_dir': options['--output-dir']
+        'output_dir': options['--output-dir'],
+        'api_key' : options['--api-key']
     })
 
     station_seed = options['--station-seed'].split(',')
