@@ -21,6 +21,10 @@ See
     
 for available command line arguments.
 
+## Obtain API key
+
+See http://data.deutschebahn.com/apis/fahrplan/
+
 ## License
 
 See LICENSE.
