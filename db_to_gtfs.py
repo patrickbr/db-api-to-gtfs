@@ -221,8 +221,8 @@ class DBApiToGTFS(object):
     # append route based on trip, return route id
     def route_append(self, trip):
         """Append a route based on a trip (if route is new), return route id"""
-        short_name = trip['name']
-        long_name = ''
+        short_name = ''
+        long_name = trip['name']
         agency_id = trip['agency_id']
 
         for rid, route in enumerate(self.routes):
