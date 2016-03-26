@@ -6,7 +6,7 @@ DB API to GTFS converter- (C) 2016 by Patrick Brosi
 Harvests the Deutsche Bahn API and generates a GTFS feed
 
 Usage:
-  db_to_gtfs.py --api-key=<key> [--start-date=<date>] [--end-date=<date>] [--station-seed=<sids>] [--output-dir=<dir>]
+  db_to_gtfs.py --api-key=<key> [--start-date=<date>] [--end-date=<date>] [--station-seed=<sids>] [--station-seed-file=<sids>] [--output-dir=<dir>]
   db_to_gtfs.py -h | --help
   db_to_gtfs.py --version
 
@@ -15,7 +15,8 @@ Options:
   --version                     Show version.
   --start-date=<date>           Start date of the feed (current date by default)
   --end-date=<date>             End date of the feed (start date + 3 days by default)
-  --station-seed=<sids>         Comma separated list of seed stations [default: 8011160]
+  --station-seed=<sids>         Comma separated list of seed stations (defaults to content of station-seed-file or "8011160")
+  --station-seed-file=<path>    File containing comma-separated list of seed stations [default: feed_stations.list]
   --output-dir=<dir>            Output directory [default: .]
   --api-key=<key>               DB-API-Key
 """
@@ -426,6 +427,14 @@ class DBApiToGTFS(object):
                 return self.stops[sid]['stop_id']
         return None
 
+    def read_station_feeds(self, path):
+        try:
+            with open(path, 'r') as stationfile:
+                stations = stationfile.read().replace('\n', '').split(',')
+                return stations
+        except IOError:
+            print('Could not read station feed file %s' % path)
+        return []
 
 def main(options=None):
     if not options['--start-date']:
@@ -441,11 +450,19 @@ def main(options=None):
         'api_key' : options['--api-key']
     })
 
-    station_seed = options['--station-seed'].split(',')
+    if options['--station-seed']:
+        station_seed = options['--station-seed'].split(',')
+    else:
+        station_seed = converter.read_station_feeds(options['--station-seed-file'])
+
+    if not station_seed:
+        station_seed = ['8011160']
 
     print 'Generating GTFS feed from %s to %s' % (options['--start-date'], options['--end-date'])
 
-    for seed in station_seed:
+    for idx, seed in enumerate(station_seed): 
+        if len(station_seed) > 10:
+            print 'Fetching details for station "%s" (%i / %i)' % (seed, idx, len(station_seed))       
         converter.process_station_by_id(int(seed))
 
     sid = converter.get_unfetched_station_id()
