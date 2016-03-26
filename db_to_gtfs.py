@@ -221,7 +221,7 @@ class DBApiToGTFS(object):
     # append route based on trip, return route id
     def route_append(self, trip):
         """Append a route based on a trip (if route is new), return route id"""
-        short_name = trip['type']
+        short_name = ''
         long_name = trip['name']
         agency_id = trip['agency_id']
 
@@ -262,8 +262,7 @@ class DBApiToGTFS(object):
                 stoptime['departure_time'] = str(int(stoptime['departure_time'].split(':')[0]) + 24 * depdelta) + ":" + stoptime[
                     'departure_time'].split(':')[1]
 
-        trip['headsign'] = self.stops[
-            trip['stoptimes'][-1]['stop_id']]['stop_name']
+        trip['headsign'] = self.stops[trip['stoptimes'][-1]['stop_id']]['stop_name']
         trip['service_date'] = start_date
 
     def get_station_detail(self, stat_id):
