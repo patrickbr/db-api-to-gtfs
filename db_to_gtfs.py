@@ -151,7 +151,7 @@ class DBApiToGTFS(object):
             'service_dates': Set()
         }
 
-        if 'JourneyDetail' in data:
+        if 'JourneyDetail' in data and 'Names' in data['JourneyDetail']:
             # meta data
             trip['name'] = self.get_first_in_list(
                 data['JourneyDetail']['Names']['Name']).get('name')
