@@ -80,7 +80,7 @@ class DBApiToGTFS(object):
         stop['trips_fetched'] = True
 
         while stop['last_date'] < self.end_date:
-            print '@ #%d (%s) on %s %s, unique trips collected: %d, unprocessed stations left: %d' % (stop['stop_id'], stop['stop_name'], stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips), self.unproced_counter)
+            print '@ #%d (%s) on %s %s, unique trips collected: %d, unprocessed stations left: %d' % (stop['stop_id'], stop['stop_name'].encode('utf-8').strip(), stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips), self.unproced_counter)
             requrl = string.Template(DEP_URL).substitute({
                 'id': stop['stop_id'],
                 'date': stop['last_date'].strftime('%Y-%m-%d'),
@@ -317,7 +317,7 @@ class DBApiToGTFS(object):
 
             for tid, trip in enumerate(self.trips):
                 trip_writer.writerow({
-                    'route_id': tid,
+                    'route_id': trip['route_id'],
                     'service_id': trip['service_id'],
                     'trip_id': tid,
                     'trip_headsign': trip['headsign']
