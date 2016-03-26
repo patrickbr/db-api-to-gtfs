@@ -453,9 +453,11 @@ def main(options=None):
     if options['--station-seed']:
         station_seed = options['--station-seed'].split(',')
     else:
+        # try to use station seed file
         station_seed = converter.read_station_feeds(options['--station-seed-file'])
 
     if not station_seed:
+        # initialize with Berlin Hbf by default
         station_seed = ['8011160']
 
     print 'Generating GTFS feed from %s to %s' % (options['--start-date'], options['--end-date'])
