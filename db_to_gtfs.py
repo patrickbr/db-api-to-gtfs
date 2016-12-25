@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.INFO,format=FORMAT)
 
 DEP_URL = 'http://open-api.bahn.de/bin/rest.exe/departureBoard?authKey=$key&lang=de&id=00$id&date=$date&time=$time&format=json'
 STATION_URL = 'http://open-api.bahn.de/bin/rest.exe/location.name?authKey=$key&lang=de&input=$search&format=json'
-
+MAX_TIMEOUT = 16
 
 class DBApiToGTFS(object):
 
@@ -91,8 +91,7 @@ class DBApiToGTFS(object):
                 'time': str(stop['last_check_h']) + ':' + str(stop['last_check_m']),
                 'key' : self.api_key
             })
-            response = urllib2.urlopen(requrl)
-            data = json.load(response)
+            data = self.fetch_json(requrl)
 
             # if no trips have been found, add 24 hours to search timespan
             stop['last_date'] = stop['last_date'] + timedelta(days=1)
@@ -138,8 +137,22 @@ class DBApiToGTFS(object):
     def fetch_json(self, url):
         """Fetch remote json"""
 
-        # TODO: error handling, retry etc.
-        response = urllib2.urlopen(url)
+        timeout = 1
+        while True:
+            try:
+                logging.debug('Opening %s.', url)
+                response = urllib2.urlopen(url)
+                break
+            except urllib2.HTTPError as err:
+                if timeout <= MAX_TIMEOUT:
+                    logging.warn('Error opening %s, error code %d, reason is %s.', url, err.code, err.reason)
+                    logging.warn('Waiting for %ds before retrying.', timeout)
+                    time.sleep(timeout)
+                    timeout *= 2
+                else:
+                    logging.error('Error opening %s, error code %d, reason is %s.', url, err.code, err.reason)
+                    raise err
+
         data = json.load(response)
 
         return data
