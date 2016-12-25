@@ -31,6 +31,10 @@ import os
 from dateutil.parser import parse as dateparse
 from datetime import timedelta
 from sets import Set
+import logging
+FORMAT = "%(message)s"
+#FORMAT = "%(asctime)-15s %(message)s"
+logging.basicConfig(level=logging.INFO,format=FORMAT)
 
 DEP_URL = 'http://open-api.bahn.de/bin/rest.exe/departureBoard?authKey=$key&lang=de&id=00$id&date=$date&time=$time&format=json'
 STATION_URL = 'http://open-api.bahn.de/bin/rest.exe/location.name?authKey=$key&lang=de&input=$search&format=json'
@@ -60,7 +64,7 @@ class DBApiToGTFS(object):
             # get the 'official' writing of station name
             det = self.get_station_detail(sid)
             if det == None:
-                print 'Warning: station %d not found.' % sid
+                logging.warn('Warning: station %d not found.', sid)
             self.process_station_by_ob(det)
 
     def process_station_by_ob(self, station):
@@ -80,7 +84,7 @@ class DBApiToGTFS(object):
         stop['trips_fetched'] = True
 
         while stop['last_date'] < self.end_date:
-            print '@ #%d (%s) on %s %s, unique trips collected: %d, unprocessed stations left: %d' % (stop['stop_id'], stop['stop_name'].encode('utf-8').strip(), stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips), self.unproced_counter)
+            logging.info('@ #%d (%s) on %s %s, unique trips collected: %d, unprocessed stations left: %d', stop['stop_id'], stop['stop_name'].encode('utf-8').strip(), stop['last_date'].strftime('%Y-%m-%d'), str(stop['last_check_h']) + ':' + str(stop['last_check_m']), len(self.trips), self.unproced_counter)
             requrl = string.Template(DEP_URL).substitute({
                 'id': stop['stop_id'],
                 'date': stop['last_date'].strftime('%Y-%m-%d'),
@@ -153,13 +157,15 @@ class DBApiToGTFS(object):
         }
 
         if 'JourneyDetail' in data and 'Names' in data['JourneyDetail']:
+            if 'errorCode' in data['JourneyDetail']:
+                logging.warn('DB API returned error "%s" (code: %s). Proceeding...', data['JourneyDetail']['errorText'], data['JourneyDetail']['errorCode'])
+                return None
+
             # meta data
-            trip['name'] = self.get_first_in_list(
-                data['JourneyDetail']['Names']['Name']).get('name')
-            trip['type'] = self.get_first_in_list(
-                data['JourneyDetail']['Types']['Type']).get('type')
-            trip['agency_id'] = self.get_first_in_list(
-                data['JourneyDetail']['Operators']['Operator']).get('name')
+            name = data['JourneyDetail']['Names']['Name']
+            trip['name'] = self.get_first_in_list(name).get('name')
+            trip['type'] = self.get_first_in_list(data['JourneyDetail']['Types']['Type']).get('type')
+            trip['agency_id'] = self.get_first_in_list(data['JourneyDetail']['Operators']['Operator']).get('name')
 
             for stoptime in data['JourneyDetail']['Stops']['Stop']:
                 # check if this station is known
@@ -459,7 +465,7 @@ def main(options=None):
         # initialize with Berlin Hbf by default
         station_seed = ['8011160']
 
-    print 'Generating GTFS feed from %s to %s' % (options['--start-date'], options['--end-date'])
+    logging.info('Generating GTFS feed from %s to %s', options['--start-date'], options['--end-date'])
 
     for idx, seed in enumerate(station_seed): 
         if len(station_seed) > 10:
@@ -480,7 +486,7 @@ def main(options=None):
     converter.write_agencies()
     converter.write_feed_info()
 
-    print 'Done, written %d trips, %d routes, %s services, %s stops' % (len(converter.trips), len(converter.routes), len(converter.calendar_dates), len(converter.stops))
+    logging.info('Done, written %d trips, %d routes, %s services, %s stops' % (len(converter.trips), len(converter.routes), len(converter.calendar_dates), len(converter.stops)))
 
 if __name__ == '__main__':
     from docopt import docopt
@@ -490,5 +496,5 @@ if __name__ == '__main__':
     try:
         main(options=arguments)
     except KeyboardInterrupt:
-        print "\nCancelled by user."
+        logging.error("Cancelled by user.")
     exit(0)
