@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.INFO,format=FORMAT)
 
 DEP_URL = 'http://open-api.bahn.de/bin/rest.exe/departureBoard?authKey=$key&lang=de&id=00$id&date=$date&time=$time&format=json'
 STATION_URL = 'http://open-api.bahn.de/bin/rest.exe/location.name?authKey=$key&lang=de&input=$search&format=json'
-MAX_TIMEOUT = 16
+MAX_TIMEOUT = 8192
 
 class DBApiToGTFS(object):
 
