@@ -12,7 +12,7 @@ Get a GTFS feed valid from May 1st to August 1st 2016
 
 ### Method
 
-The script begins at seed stations (Berlin Hbf, by default) and crawls to every station reachable by trips from the seed stations. Trips, routes and service dates are collected on the way and finally written to the GTFS files.
+The script begins at seed stations (Berlin Hbf, by default) and crawls to every station reachable by trips from the seed stations. Trips, routes and service dates are collected on the way and ultimately written to the GTFS files.
     
 ## Flags
 See
