@@ -4,6 +4,8 @@ Convert the timetable data published through the [DB API](http://data.deutscheba
 
 An example feed valid from February 28th to May 1rst can be found [here](http://patrickbrosi.de/de/projects/dbgtfs).
 
+**Update:** A complete GTFS feed for Germany (including busses, subways, trams, long distance, regional and urban rail) can now be found here: [http://gtfs.de](http://gtfs.de)
+
 ## Usage
 
 Get a GTFS feed valid from May 1st to August 1st 2016
